@@ -1,0 +1,1036 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quantum Heat Equation Web App</title>
+  <style>
+    :root {
+      --bg: #f6f7f4;
+      --panel: #ffffff;
+      --ink: #1f2933;
+      --muted: #617080;
+      --line: #d9ded8;
+      --teal: #007c89;
+      --rose: #b4475a;
+      --amber: #b7791f;
+      --green: #2f855a;
+      --slate: #34495e;
+      --soft: #eef3f1;
+      --shadow: 0 10px 26px rgba(31, 41, 51, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    header {
+      border-bottom: 1px solid var(--line);
+      background: #fbfcfa;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) auto;
+      gap: 18px;
+      align-items: end;
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 18px 22px 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(24px, 3vw, 38px);
+      line-height: 1.05;
+      font-weight: 760;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      max-width: 850px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(92px, 1fr));
+      gap: 8px;
+      min-width: 430px;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 8px;
+      padding: 9px 10px;
+      min-height: 58px;
+    }
+
+    .stat small {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .stat strong {
+      display: block;
+      margin-top: 4px;
+      font-variant-numeric: tabular-nums;
+      font-size: 18px;
+    }
+
+    main {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 18px 22px 28px;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr 1fr 1fr auto;
+      gap: 12px;
+      align-items: end;
+      margin-bottom: 16px;
+    }
+
+    .control {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .control label {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .control output {
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+      font-weight: 680;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--teal);
+    }
+
+    select {
+      width: 100%;
+      height: 34px;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      color: var(--ink);
+      background: #fff;
+      padding: 0 8px;
+    }
+
+    .icon-button {
+      width: 46px;
+      height: 46px;
+      border: 1px solid #b7c7c3;
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--teal);
+      font-size: 22px;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+
+    .icon-button:hover {
+      border-color: var(--teal);
+      background: #f4fbfa;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(380px, 0.92fr) minmax(560px, 1.55fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel h2 {
+      margin: 0;
+      padding: 13px 14px 10px;
+      font-size: 16px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcfa;
+    }
+
+    .panel-body {
+      padding: 14px;
+    }
+
+    .left-stack,
+    .right-stack {
+      display: grid;
+      gap: 16px;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      background: #ffffff;
+    }
+
+    #circuitCanvas {
+      aspect-ratio: 16 / 6.3;
+    }
+
+    #surfaceCanvas {
+      aspect-ratio: 16 / 9;
+    }
+
+    #heatmapCanvas,
+    #lineCanvas {
+      aspect-ratio: 16 / 6;
+    }
+
+    .idea-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .idea {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 10px;
+      align-items: start;
+      background: var(--soft);
+      border: 1px solid #d7e3df;
+      border-radius: 8px;
+      padding: 11px;
+    }
+
+    .idea-badge {
+      display: inline-grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #dcefeb;
+      color: var(--teal);
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .idea strong {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 14px;
+    }
+
+    .idea p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .plain-note {
+      display: grid;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .takeaway {
+      border: 1px solid #eadcc0;
+      border-radius: 8px;
+      background: #fff8ea;
+      color: #5f461b;
+      padding: 12px;
+    }
+
+    .takeaway strong {
+      color: #4a3411;
+    }
+
+    .matrix {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .key {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .swatch {
+      width: 14px;
+      height: 4px;
+      border-radius: 2px;
+      display: inline-block;
+      background: var(--teal);
+    }
+
+    .swatch.rose {
+      background: var(--rose);
+    }
+
+    .swatch.green {
+      background: var(--green);
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-bottom: 1px solid var(--line);
+      background: #fbfcfa;
+    }
+
+    .tab {
+      border: 0;
+      border-right: 1px solid var(--line);
+      background: transparent;
+      padding: 10px;
+      cursor: pointer;
+      color: var(--muted);
+      font-weight: 660;
+    }
+
+    .tab:last-child {
+      border-right: 0;
+    }
+
+    .tab[aria-selected="true"] {
+      color: var(--ink);
+      background: #ffffff;
+      box-shadow: inset 0 -3px 0 var(--teal);
+    }
+
+    .tab-view {
+      display: none;
+    }
+
+    .tab-view.active {
+      display: block;
+    }
+
+    @media (max-width: 1050px) {
+      .topbar,
+      .toolbar,
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .stats {
+        min-width: 0;
+        grid-template-columns: repeat(2, minmax(120px, 1fr));
+      }
+
+      .toolbar {
+        align-items: stretch;
+      }
+    }
+
+    @media (max-width: 640px) {
+      main,
+      .topbar {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <div>
+        <h1>Quantum Heat Equation Simulator</h1>
+        <p class="subtitle">뜨거운 부분이 식어 가며 주변으로 퍼지는 모습을, 양자 회로가 다루기 쉬운 파동 성분의 회전으로 바꾸어 보여줍니다.</p>
+      </div>
+      <section class="stats" aria-label="simulation summary">
+        <div class="stat"><small>시간</small><strong id="statTime">0.15</strong></div>
+        <div class="stat"><small>진폭 수</small><strong id="statDim">256</strong></div>
+        <div class="stat"><small>모델 오차</small><strong id="statErr">0.0000</strong></div>
+        <div class="stat"><small>최대 오차</small><strong id="statMaxErr">0.0000</strong></div>
+      </section>
+    </div>
+  </header>
+
+  <main>
+    <section class="toolbar" aria-label="controls">
+      <div class="control">
+        <label for="timeSlider"><span>시간</span><output id="timeOut">0.15</output></label>
+        <input id="timeSlider" type="range" min="0" max="0.8" step="0.01" value="0.15">
+      </div>
+      <div class="control">
+        <label for="horizonSlider"><span>보여줄 시간 범위</span><output id="horizonOut">0.80</output></label>
+        <input id="horizonSlider" type="range" min="0.2" max="1.2" step="0.05" value="0.8">
+      </div>
+      <div class="control">
+        <label for="ampSlider"><span>잔물결 세기</span><output id="ampOut">0.50</output></label>
+        <input id="ampSlider" type="range" min="0" max="1" step="0.05" value="0.5">
+      </div>
+      <div class="control">
+        <label for="pQubits"><span>숨겨진 보조축</span><output id="pOut">5</output></label>
+        <select id="pQubits">
+          <option value="4">4 큐비트</option>
+          <option value="5" selected>5 큐비트</option>
+        </select>
+      </div>
+      <button id="playButton" class="icon-button" type="button" title="Animate time" aria-label="Animate time">▶</button>
+    </section>
+
+    <section class="layout">
+      <div class="left-stack">
+        <section class="panel">
+          <h2>양자 회로</h2>
+          <div class="panel-body">
+            <canvas id="circuitCanvas" width="900" height="360" aria-label="quantum circuit diagram"></canvas>
+            <div class="legend">
+              <span class="key"><span class="swatch"></span>관점 전환</span>
+              <span class="key"><span class="swatch rose"></span>시간 변화</span>
+              <span class="key"><span class="swatch green"></span>초기 모양</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>무슨 일이 일어나나</h2>
+          <div class="panel-body">
+            <div class="idea-list">
+              <div class="idea">
+                <span class="idea-badge">1</span>
+                <div><strong>처음에는 울퉁불퉁한 열 분포가 있습니다</strong><p>어떤 곳은 뜨겁고 어떤 곳은 차갑습니다. 시간이 지나면 뾰족한 봉우리는 낮아지고 골짜기는 메워지며 전체가 부드러워집니다.</p></div>
+              </div>
+              <div class="idea">
+                <span class="idea-badge">2</span>
+                <div><strong>모양을 여러 파동 성분으로 나눕니다</strong><p>QFT 블록은 복잡한 곡선을 단순한 물결들의 합으로 바라봅니다. 큰 물결은 오래 남고, 촘촘한 잔물결은 빨리 사라집니다.</p></div>
+              </div>
+              <div class="idea">
+                <span class="idea-badge">3</span>
+                <div><strong>각 파동을 정해진 속도로 회전시킵니다</strong><p>가운데 블록은 각 파동 성분에 시간에 따른 위상 회전을 줍니다. 양자 회로는 이런 되돌릴 수 있는 회전을 자연스럽게 처리합니다.</p></div>
+              </div>
+              <div class="idea">
+                <span class="idea-badge">4</span>
+                <div><strong>다시 열 분포로 읽어 냅니다</strong><p>숨겨진 보조축은 회전을 열 확산처럼 보이게 되돌리는 데 필요한 정보를 보관합니다. 마지막에는 그중 필요한 부분만 모아 곡선을 복원합니다.</p></div>
+              </div>
+            </div>
+            <div class="matrix" id="matrixNote"></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>직관적 이해</h2>
+          <div class="panel-body">
+            <div class="plain-note">
+              <p>열 확산은 구겨진 천을 펴는 것과 비슷합니다. 높은 부분은 내려가고 낮은 부분은 올라오며, 작은 주름부터 먼저 사라집니다.</p>
+              <p>일반적인 heat equation은 정보를 줄이는 방향으로 움직입니다. 반면 양자 회로는 전체 확률을 보존해야 합니다. 그래서 보조축을 하나 더 두고, 더 큰 공간에서는 되돌릴 수 있게 움직인 다음, 우리가 보고 싶은 열 분포만 다시 꺼냅니다.</p>
+              <div class="takeaway"><strong>핵심:</strong> 이 회로가 칩 위에서 실제 열을 흐르게 하는 것은 아닙니다. 열 분포를 파동 성분으로 바꾸고, 그 성분들을 되돌릴 수 있게 회전시킨 뒤, 다시 열 확산 그림으로 읽어 내는 방식입니다.</div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="right-stack">
+        <section class="panel">
+          <div class="tabs" role="tablist" aria-label="visualization tabs">
+            <button class="tab" type="button" role="tab" aria-selected="true" data-tab="surface">3D 보기</button>
+            <button class="tab" type="button" role="tab" aria-selected="false" data-tab="heatmap">시간 지도</button>
+            <button class="tab" type="button" role="tab" aria-selected="false" data-tab="snapshots">시간별 단면</button>
+          </div>
+          <div class="panel-body">
+            <div id="surface" class="tab-view active" role="tabpanel">
+              <canvas id="surfaceCanvas" width="960" height="540" aria-label="3D heat equation surface"></canvas>
+            </div>
+            <div id="heatmap" class="tab-view" role="tabpanel">
+              <canvas id="heatmapCanvas" width="960" height="360" aria-label="heat equation time heatmap"></canvas>
+            </div>
+            <div id="snapshots" class="tab-view" role="tabpanel">
+              <canvas id="lineCanvas" width="960" height="360" aria-label="heat equation snapshots"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>현재 열 분포</h2>
+          <div class="panel-body">
+            <canvas id="sliceCanvas" width="960" height="360" aria-label="current heat equation time slice"></canvas>
+            <div class="legend">
+              <span class="key"><span class="swatch green"></span>처음 모양</span>
+              <span class="key"><span class="swatch"></span>회로로 복원한 모양</span>
+              <span class="key"><span class="swatch rose"></span>고전적 계산값</span>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const MX = 3;
+    const L_X = 2 * Math.PI;
+    const P_MAX = 6.0;
+    const TIME_SAMPLES = 27;
+
+    const els = {
+      time: document.getElementById("timeSlider"),
+      horizon: document.getElementById("horizonSlider"),
+      amp: document.getElementById("ampSlider"),
+      pQubits: document.getElementById("pQubits"),
+      play: document.getElementById("playButton"),
+      timeOut: document.getElementById("timeOut"),
+      horizonOut: document.getElementById("horizonOut"),
+      ampOut: document.getElementById("ampOut"),
+      pOut: document.getElementById("pOut"),
+      statTime: document.getElementById("statTime"),
+      statDim: document.getElementById("statDim"),
+      statErr: document.getElementById("statErr"),
+      statMaxErr: document.getElementById("statMaxErr"),
+      matrixNote: document.getElementById("matrixNote"),
+      circuitCanvas: document.getElementById("circuitCanvas"),
+      surfaceCanvas: document.getElementById("surfaceCanvas"),
+      heatmapCanvas: document.getElementById("heatmapCanvas"),
+      lineCanvas: document.getElementById("lineCanvas"),
+      sliceCanvas: document.getElementById("sliceCanvas")
+    };
+
+    let playing = false;
+    let rafId = null;
+
+    function complex(re = 0, im = 0) {
+      return { re, im };
+    }
+
+    function add(a, b) {
+      return { re: a.re + b.re, im: a.im + b.im };
+    }
+
+    function mul(a, b) {
+      return { re: a.re * b.re - a.im * b.im, im: a.re * b.im + a.im * b.re };
+    }
+
+    function phase(theta) {
+      return { re: Math.cos(theta), im: Math.sin(theta) };
+    }
+
+    function fftFreq(n, domainLength) {
+      const step = domainLength / n;
+      const out = [];
+      for (let i = 0; i < n; i++) {
+        const f = i < n / 2 ? i : i - n;
+        out.push(2 * Math.PI * f / (n * step));
+      }
+      return out;
+    }
+
+    function qftAlongX(state, nx, np, inverse = false) {
+      const out = Array.from({ length: nx * np }, () => complex());
+      const sign = inverse ? -1 : 1;
+      const scale = 1 / Math.sqrt(nx);
+      for (let p = 0; p < np; p++) {
+        for (let k = 0; k < nx; k++) {
+          let acc = complex();
+          for (let j = 0; j < nx; j++) {
+            const angle = sign * 2 * Math.PI * j * k / nx;
+            acc = add(acc, mul(state[p * nx + j], phase(angle)));
+          }
+          out[p * nx + k] = complex(acc.re * scale, acc.im * scale);
+        }
+      }
+      return out;
+    }
+
+    function qftAlongP(state, nx, np, inverse = false) {
+      const out = Array.from({ length: nx * np }, () => complex());
+      const sign = inverse ? -1 : 1;
+      const scale = 1 / Math.sqrt(np);
+      for (let x = 0; x < nx; x++) {
+        for (let k = 0; k < np; k++) {
+          let acc = complex();
+          for (let j = 0; j < np; j++) {
+            const angle = sign * 2 * Math.PI * j * k / np;
+            acc = add(acc, mul(state[j * nx + x], phase(angle)));
+          }
+          out[k * nx + x] = complex(acc.re * scale, acc.im * scale);
+        }
+      }
+      return out;
+    }
+
+    function parameters() {
+      return {
+        t: Number(els.time.value),
+        horizon: Number(els.horizon.value),
+        amp2: Number(els.amp.value),
+        mp: Number(els.pQubits.value)
+      };
+    }
+
+    function grids(mp) {
+      const nx = 2 ** MX;
+      const np = 2 ** mp;
+      const x = Array.from({ length: nx }, (_, i) => L_X * i / nx);
+      const p = Array.from({ length: np }, (_, i) => -P_MAX + 2 * P_MAX * i / np);
+      const dp = 2 * P_MAX / np;
+      return { nx, np, x, p, dp };
+    }
+
+    function initialU(x, amp2) {
+      return Math.sin(x) + amp2 * Math.sin(2 * x);
+    }
+
+    function exactU(x, t, amp2) {
+      return Math.exp(-t) * Math.sin(x) + amp2 * Math.exp(-4 * t) * Math.sin(2 * x);
+    }
+
+    function simulateAt(t, amp2, mp) {
+      const g = grids(mp);
+      const kx = fftFreq(g.nx, L_X);
+      const eta = fftFreq(g.np, 2 * P_MAX);
+      const u0 = g.x.map(value => initialU(value, amp2));
+
+      let normSq = 0;
+      let state = [];
+      for (let ip = 0; ip < g.np; ip++) {
+        const envelope = Math.exp(-Math.abs(g.p[ip]));
+        for (let ix = 0; ix < g.nx; ix++) {
+          const value = envelope * u0[ix];
+          normSq += value * value;
+          state.push(complex(value, 0));
+        }
+      }
+      const norm = Math.sqrt(normSq);
+      state = state.map(z => complex(z.re / norm, z.im / norm));
+
+      state = qftAlongX(state, g.nx, g.np, false);
+      state = qftAlongP(state, g.nx, g.np, false);
+
+      for (let ip = 0; ip < g.np; ip++) {
+        for (let ix = 0; ix < g.nx; ix++) {
+          const angle = -t * kx[ix] * kx[ix] * eta[ip];
+          state[ip * g.nx + ix] = mul(state[ip * g.nx + ix], phase(angle));
+        }
+      }
+
+      state = qftAlongP(state, g.nx, g.np, true);
+      state = qftAlongX(state, g.nx, g.np, true);
+
+      const w = state.map(z => complex(z.re * norm, z.im * norm));
+      let discreteWeight = 0;
+      for (let ip = 0; ip < g.np; ip++) {
+        if (g.p[ip] > 0) {
+          discreteWeight += Math.exp(-Math.abs(g.p[ip])) * g.dp;
+        }
+      }
+
+      const uQuantum = Array.from({ length: g.nx }, () => 0);
+      for (let ix = 0; ix < g.nx; ix++) {
+        let sum = 0;
+        for (let ip = 0; ip < g.np; ip++) {
+          if (g.p[ip] > 0) {
+            sum += w[ip * g.nx + ix].re * g.dp;
+          }
+        }
+        uQuantum[ix] = sum / discreteWeight;
+      }
+
+      const uExact = g.x.map(value => exactU(value, t, amp2));
+      const uInitial = g.x.map(value => initialU(value, amp2));
+      let errSq = 0;
+      let exactSq = 0;
+      let maxErr = 0;
+      for (let i = 0; i < g.nx; i++) {
+        const delta = uQuantum[i] - uExact[i];
+        errSq += delta * delta;
+        exactSq += uExact[i] * uExact[i];
+        maxErr = Math.max(maxErr, Math.abs(delta));
+      }
+      const relError = Math.sqrt(errSq) / Math.max(1e-12, Math.sqrt(exactSq));
+
+      return { ...g, u0: uInitial, uQuantum, uExact, relError, maxErr, norm, stateDim: g.nx * g.np };
+    }
+
+    function simulateTimeSeries(params) {
+      const rows = [];
+      const exactRows = [];
+      const errors = [];
+      const times = [];
+      for (let i = 0; i < TIME_SAMPLES; i++) {
+        const t = params.horizon * i / (TIME_SAMPLES - 1);
+        const result = simulateAt(t, params.amp2, params.mp);
+        times.push(t);
+        rows.push(result.uQuantum);
+        exactRows.push(result.uExact);
+        errors.push(result.relError);
+      }
+      return { times, rows, exactRows, errors };
+    }
+
+    function setupCanvas(canvas) {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+      canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return { ctx, w: rect.width, h: rect.height };
+    }
+
+    function roundRect(ctx, x, y, w, h, r) {
+      const radius = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.arcTo(x + w, y, x + w, y + h, radius);
+      ctx.arcTo(x + w, y + h, x, y + h, radius);
+      ctx.arcTo(x, y + h, x, y, radius);
+      ctx.arcTo(x, y, x + w, y, radius);
+      ctx.closePath();
+    }
+
+    function drawGate(ctx, x, y1, y2, label, fill, stroke) {
+      const h = y2 - y1 + 28;
+      roundRect(ctx, x, y1 - 14, 96, h, 6);
+      ctx.fillStyle = fill;
+      ctx.strokeStyle = stroke;
+      ctx.lineWidth = 1.4;
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#1f2933";
+      ctx.font = "12px ui-sans-serif, system-ui";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      const parts = label.split("\\n");
+      parts.forEach((part, i) => ctx.fillText(part, x + 48, y1 + (y2 - y1) / 2 + (i - (parts.length - 1) / 2) * 14));
+    }
+
+    function drawCircuit(result, params) {
+      const { ctx, w, h } = setupCanvas(els.circuitCanvas);
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, w, h);
+
+      const wires = MX + params.mp;
+      const left = 54;
+      const right = w - 22;
+      const top = 34;
+      const bottom = h - 26;
+      const gap = (bottom - top) / Math.max(1, wires - 1);
+      const y = i => top + i * gap;
+      const xScale = w / 900;
+      const gx = value => value * xScale;
+
+      ctx.strokeStyle = "#c8d0cc";
+      ctx.lineWidth = 1.2;
+      ctx.font = "12px ui-sans-serif, system-ui";
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      for (let i = 0; i < wires; i++) {
+        ctx.beginPath();
+        ctx.moveTo(left, y(i));
+        ctx.lineTo(right, y(i));
+        ctx.stroke();
+        ctx.fillStyle = i < MX ? "#006d77" : "#74512d";
+        ctx.fillText(i < MX ? `x${i}` : `p${i - MX}`, left - 9, y(i));
+      }
+
+      drawGate(ctx, gx(80), y(0), y(wires - 1), "prepare\\nw0", "#e7f3ef", "#2f855a");
+      drawGate(ctx, gx(205), y(0), y(MX - 1), "QFT\\nx", "#e5f4f6", "#007c89");
+      drawGate(ctx, gx(325), y(MX), y(wires - 1), "QFT\\np", "#e5f4f6", "#007c89");
+      drawGate(ctx, gx(450), y(0), y(wires - 1), `diag\\ne^{-i t k²η}`, "#f9e8ed", "#b4475a");
+      drawGate(ctx, gx(610), y(MX), y(wires - 1), "IQFT\\np", "#e5f4f6", "#007c89");
+      drawGate(ctx, gx(730), y(0), y(MX - 1), "IQFT\\nx", "#e5f4f6", "#007c89");
+
+      ctx.fillStyle = "#617080";
+      ctx.font = "12px ui-sans-serif, system-ui";
+      ctx.textAlign = "left";
+      ctx.fillText(`x 큐비트=${MX}, 보조축 큐비트=${params.mp}, 진폭 수=${result.stateDim}`, left, h - 7);
+    }
+
+    function valueColor(v, min = -1.15, max = 1.15) {
+      const t = Math.max(0, Math.min(1, (v - min) / (max - min)));
+      const stops = [
+        [24, 64, 99],
+        [0, 124, 137],
+        [245, 247, 244],
+        [183, 71, 90],
+        [120, 47, 64]
+      ];
+      const scaled = t * (stops.length - 1);
+      const i = Math.min(stops.length - 2, Math.floor(scaled));
+      const f = scaled - i;
+      const c = stops[i].map((channel, idx) => Math.round(channel + f * (stops[i + 1][idx] - channel)));
+      return `rgb(${c[0]},${c[1]},${c[2]})`;
+    }
+
+    function drawAxes(ctx, plot, xLabel, yLabel) {
+      ctx.strokeStyle = "#ccd4d0";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(plot.x, plot.y);
+      ctx.lineTo(plot.x, plot.y + plot.h);
+      ctx.lineTo(plot.x + plot.w, plot.y + plot.h);
+      ctx.stroke();
+      ctx.fillStyle = "#617080";
+      ctx.font = "12px ui-sans-serif, system-ui";
+      ctx.textAlign = "center";
+      ctx.fillText(xLabel, plot.x + plot.w / 2, plot.y + plot.h + 30);
+      ctx.save();
+      ctx.translate(plot.x - 34, plot.y + plot.h / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText(yLabel, 0, 0);
+      ctx.restore();
+    }
+
+    function drawSlice(result, params) {
+      const { ctx, w, h } = setupCanvas(els.sliceCanvas);
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, w, h);
+      const plot = { x: 54, y: 20, w: w - 78, h: h - 72 };
+      const all = [...result.u0, ...result.uQuantum, ...result.uExact];
+      const ymax = Math.max(1.05, Math.max(...all.map(v => Math.abs(v))) * 1.12);
+      const sx = i => plot.x + plot.w * i / (result.nx - 1);
+      const sy = v => plot.y + plot.h * (1 - (v + ymax) / (2 * ymax));
+
+      ctx.strokeStyle = "#eef1ee";
+      for (let i = -2; i <= 2; i++) {
+        const yy = sy(i * ymax / 2);
+        ctx.beginPath();
+        ctx.moveTo(plot.x, yy);
+        ctx.lineTo(plot.x + plot.w, yy);
+        ctx.stroke();
+      }
+      drawAxes(ctx, plot, "x", "u(t,x)");
+
+      function plotLine(values, color, width, dash = []) {
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width;
+        ctx.setLineDash(dash);
+        ctx.beginPath();
+        values.forEach((value, i) => {
+          const x = sx(i);
+          const y = sy(value);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      plotLine(result.u0, "#2f855a", 1.8, [5, 4]);
+      plotLine(result.uExact, "#b4475a", 2.4);
+      plotLine(result.uQuantum, "#007c89", 2.6);
+
+      ctx.fillStyle = "#617080";
+      ctx.font = "12px ui-sans-serif, system-ui";
+      ctx.textAlign = "left";
+      ctx.fillText(`시간=${params.t.toFixed(2)}   오차=${result.relError.toFixed(5)}`, plot.x + 4, plot.y + 14);
+    }
+
+    function drawHeatmap(series, params) {
+      const { ctx, w, h } = setupCanvas(els.heatmapCanvas);
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, w, h);
+      const nx = 2 ** MX;
+      const plot = { x: 58, y: 20, w: w - 86, h: h - 76 };
+      const rowH = plot.h / series.rows.length;
+      const colW = plot.w / nx;
+      for (let r = 0; r < series.rows.length; r++) {
+        for (let c = 0; c < nx; c++) {
+          ctx.fillStyle = valueColor(series.rows[r][c]);
+          ctx.fillRect(plot.x + c * colW, plot.y + (series.rows.length - 1 - r) * rowH, colW + 0.5, rowH + 0.5);
+        }
+      }
+      drawAxes(ctx, plot, "x", "time");
+      ctx.fillStyle = "#617080";
+      ctx.font = "12px ui-sans-serif, system-ui";
+      ctx.textAlign = "right";
+      ctx.fillText(params.horizon.toFixed(2), plot.x - 8, plot.y + 5);
+      ctx.fillText("0", plot.x - 8, plot.y + plot.h);
+    }
+
+    function drawSurface(series, params) {
+      const { ctx, w, h } = setupCanvas(els.surfaceCanvas);
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, w, h);
+
+      const rows = series.rows;
+      const nx = rows[0].length;
+      const cx = w * 0.52;
+      const cy = h * 0.56;
+      const scaleX = w * 0.44;
+      const scaleY = h * 0.55;
+      const scaleZ = h * 0.24;
+
+      function project(ix, it, z) {
+        const x = ix / (nx - 1) - 0.5;
+        const y = it / (rows.length - 1) - 0.5;
+        return {
+          x: cx + (x - y) * scaleX,
+          y: cy + (x + y) * scaleY * 0.34 - z * scaleZ
+        };
+      }
+
+      for (let it = rows.length - 2; it >= 0; it--) {
+        for (let ix = 0; ix < nx - 1; ix++) {
+          const p1 = project(ix, it, rows[it][ix]);
+          const p2 = project(ix + 1, it, rows[it][ix + 1]);
+          const p3 = project(ix + 1, it + 1, rows[it + 1][ix + 1]);
+          const p4 = project(ix, it + 1, rows[it + 1][ix]);
+          const avg = (rows[it][ix] + rows[it][ix + 1] + rows[it + 1][ix] + rows[it + 1][ix + 1]) / 4;
+          ctx.beginPath();
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.lineTo(p3.x, p3.y);
+          ctx.lineTo(p4.x, p4.y);
+          ctx.closePath();
+          ctx.fillStyle = valueColor(avg);
+          ctx.strokeStyle = "rgba(31,41,51,0.22)";
+          ctx.lineWidth = 0.8;
+          ctx.fill();
+          ctx.stroke();
+        }
+      }
+
+      ctx.fillStyle = "#617080";
+      ctx.font = "13px ui-sans-serif, system-ui";
+      ctx.textAlign = "left";
+      ctx.fillText("x", w * 0.77, h * 0.78);
+      ctx.fillText("시간", w * 0.2, h * 0.79);
+      ctx.fillText("u(t,x)", w * 0.08, h * 0.18);
+    }
+
+    function drawSnapshots(series, params) {
+      const { ctx, w, h } = setupCanvas(els.lineCanvas);
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, w, h);
+      const plot = { x: 54, y: 20, w: w - 78, h: h - 74 };
+      const nx = series.rows[0].length;
+      const all = series.rows.flat();
+      const ymax = Math.max(1.05, Math.max(...all.map(v => Math.abs(v))) * 1.12);
+      const sx = i => plot.x + plot.w * i / (nx - 1);
+      const sy = v => plot.y + plot.h * (1 - (v + ymax) / (2 * ymax));
+      drawAxes(ctx, plot, "x", "u(t,x)");
+
+      const indices = [0, 6, 13, 20, 26].filter(i => i < series.rows.length);
+      const colors = ["#2f855a", "#007c89", "#34495e", "#b7791f", "#b4475a"];
+      indices.forEach((idx, colorIdx) => {
+        ctx.strokeStyle = colors[colorIdx];
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        series.rows[idx].forEach((value, i) => {
+          if (i === 0) ctx.moveTo(sx(i), sy(value));
+          else ctx.lineTo(sx(i), sy(value));
+        });
+        ctx.stroke();
+        ctx.fillStyle = colors[colorIdx];
+        ctx.font = "12px ui-sans-serif, system-ui";
+        ctx.fillText(`시간=${series.times[idx].toFixed(2)}`, plot.x + 8 + colorIdx * 92, plot.y + 14);
+      });
+    }
+
+    function updateText(result, params) {
+      els.timeOut.value = params.t.toFixed(2);
+      els.horizonOut.value = params.horizon.toFixed(2);
+      els.ampOut.value = params.amp2.toFixed(2);
+      els.pOut.value = String(params.mp);
+      els.statTime.textContent = params.t.toFixed(2);
+      els.statDim.textContent = String(result.stateDim);
+      els.statErr.textContent = result.relError.toFixed(5);
+      els.statMaxErr.textContent = result.maxErr.toFixed(5);
+      els.matrixNote.innerHTML = `
+        <div><strong>보이는 격자:</strong> x축 위의 열 위치 ${result.nx}개를 계산합니다.</div>
+        <div><strong>숨겨진 보조 격자:</strong> 되돌릴 수 있는 양자 기록을 위해 ${result.np}개의 보조 위치를 사용합니다.</div>
+        <div><strong>현재 비교:</strong> 청록색은 회로로 복원한 곡선이고, 붉은색은 고전적 heat equation 계산값입니다.</div>
+      `;
+    }
+
+    function render() {
+      const params = parameters();
+      const current = simulateAt(params.t, params.amp2, params.mp);
+      const series = simulateTimeSeries(params);
+      updateText(current, params);
+      drawCircuit(current, params);
+      drawSlice(current, params);
+      drawSurface(series, params);
+      drawHeatmap(series, params);
+      drawSnapshots(series, params);
+    }
+
+    function animate() {
+      if (!playing) return;
+      const next = Number(els.time.value) + 0.006;
+      const max = Number(els.time.max);
+      els.time.value = next > max ? 0 : next;
+      render();
+      rafId = requestAnimationFrame(animate);
+    }
+
+    els.play.addEventListener("click", () => {
+      playing = !playing;
+      els.play.textContent = playing ? "Ⅱ" : "▶";
+      if (playing) animate();
+      else if (rafId) cancelAnimationFrame(rafId);
+    });
+
+    [els.time, els.horizon, els.amp, els.pQubits].forEach(input => {
+      input.addEventListener("input", render);
+      input.addEventListener("change", render);
+    });
+
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(item => item.setAttribute("aria-selected", "false"));
+        document.querySelectorAll(".tab-view").forEach(view => view.classList.remove("active"));
+        tab.setAttribute("aria-selected", "true");
+        document.getElementById(tab.dataset.tab).classList.add("active");
+        render();
+      });
+    });
+
+    window.addEventListener("resize", render);
+    render();
+  </script>
+</body>
+</html>
