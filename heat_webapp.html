@@ -61,6 +61,58 @@
       max-width: 850px;
     }
 
+    .intro-copy {
+      margin-top: 14px;
+      max-width: 880px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.62;
+    }
+
+    .intro-copy h2 {
+      margin: 16px 0 6px;
+      color: var(--ink);
+      font-size: 17px;
+    }
+
+    .intro-copy p {
+      margin: 0 0 10px;
+    }
+
+    .equation-strip {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(240px, 1fr));
+      gap: 10px;
+      margin: 12px 0;
+    }
+
+    .mini-equation,
+    .equation-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      padding: 11px 12px;
+    }
+
+    .mini-equation strong,
+    .equation-card strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .mini-equation span,
+    .equation-card span {
+      display: block;
+      overflow-x: auto;
+      font-family: "Cambria Math", "Times New Roman", serif;
+      color: #26323c;
+      font-size: 17px;
+      line-height: 1.65;
+      white-space: nowrap;
+    }
+
     .stats {
       display: grid;
       grid-template-columns: repeat(4, minmax(92px, 1fr));
@@ -216,6 +268,23 @@
       gap: 10px;
     }
 
+    .equation-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .equation-card {
+      border-left: 4px solid var(--teal);
+    }
+
+    .equation-card.rose {
+      border-left-color: var(--rose);
+    }
+
+    .equation-card.amber {
+      border-left-color: var(--amber);
+    }
+
     .idea {
       display: grid;
       grid-template-columns: 34px 1fr;
@@ -362,6 +431,10 @@
       .toolbar {
         align-items: stretch;
       }
+
+      .equation-strip {
+        grid-template-columns: 1fr;
+      }
     }
 
     @media (max-width: 640px) {
@@ -383,6 +456,25 @@
       <div>
         <h1>Quantum Heat Equation Simulator</h1>
         <p class="subtitle">뜨거운 부분이 식어 가며 주변으로 퍼지는 모습을, 양자 회로가 다루기 쉬운 파동 성분의 회전으로 바꾸어 보여줍니다.</p>
+
+        <div class="intro-copy">
+          <h2>이걸 왜 하나요?</h2>
+          <p>날씨와 유체의 움직임을 정확히 예측하기 어려운 이유 중 하나는 관련 편미분방정식의 해를 닫힌 형태로 구하기 어렵고, 수치 계산도 매우 오래 걸리기 때문입니다.</p>
+          <div class="equation-strip" aria-label="related equations">
+            <div class="mini-equation">
+              <strong>Navier-Stokes equation의 전형적 형태</strong>
+              <span>∂<sub>t</sub>v + (v·∇)v = −∇p + νΔv + f, &nbsp; ∇·v = 0</span>
+            </div>
+            <div class="mini-equation">
+              <strong>Heat equation</strong>
+              <span>∂<sub>t</sub>u = αΔu</span>
+            </div>
+          </div>
+          <p>Heat equation은 직접 풀 수 있는 대표적인 parabolic equation이지만, 확산형 PDE를 양자 회로의 유니터리 시간 변화로 옮기는 아이디어를 가장 단순하게 보여줍니다. 이 방식이 더 복잡한 유체 모델링으로 확장될 수 있다면 계산 관점에서 의미가 큽니다.</p>
+
+          <h2>구현 결과의 장단점</h2>
+          <p>이 앱은 작은 격자 위에서 양자 회로가 수행할 유니터리 변환을 정확히 계산합니다. 다만 실제 공간을 표현하는 큐비트 수가 제한되어 있으므로, 여기서 보이는 결과는 큰 유체 문제 전체가 아니라 핵심 원리를 보여주는 축소 모델입니다.</p>
+        </div>
       </div>
       <section class="stats" aria-label="simulation summary">
         <div class="stat"><small>시간</small><strong id="statTime">0.15</strong></div>
@@ -427,6 +519,30 @@
               <span class="key"><span class="swatch"></span>관점 전환</span>
               <span class="key"><span class="swatch rose"></span>시간 변화</span>
               <span class="key"><span class="swatch green"></span>초기 모양</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>핵심 수식</h2>
+          <div class="panel-body">
+            <div class="equation-list">
+              <div class="equation-card">
+                <strong>1. 원래 heat equation</strong>
+                <span>∂<sub>t</sub>u(t,x) − ∂<sub>xx</sub>u(t,x) = 0</span>
+              </div>
+              <div class="equation-card amber">
+                <strong>2. 보조축 p로 확장</strong>
+                <span>w(t,x,p) = e<sup>−|p|</sup>u(t,x)</span>
+              </div>
+              <div class="equation-card rose">
+                <strong>3. Fourier basis에서의 회전</strong>
+                <span>|k,η⟩ → exp(−i t k²η)|k,η⟩</span>
+              </div>
+              <div class="equation-card">
+                <strong>4. 다시 heat solution으로 읽기</strong>
+                <span>u(t,x) = ∫<sub>0</sub><sup>∞</sup>w(t,x,p)dp</span>
+              </div>
             </div>
           </div>
         </section>
