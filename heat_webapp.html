@@ -258,6 +258,11 @@
       aspect-ratio: 16 / 9;
     }
 
+    #initialCanvas {
+      aspect-ratio: 16 / 5.4;
+      cursor: crosshair;
+    }
+
     #heatmapCanvas,
     #lineCanvas {
       aspect-ratio: 16 / 6;
@@ -339,6 +344,43 @@
 
     .takeaway strong {
       color: #4a3411;
+    }
+
+    .resource-link {
+      margin-top: 10px;
+    }
+
+    .resource-link a {
+      color: var(--teal);
+      font-weight: 700;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(0, 124, 137, 0.35);
+    }
+
+    .resource-link a:hover {
+      border-bottom-color: var(--teal);
+    }
+
+    .editor-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .secondary-button {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--ink);
+      font-weight: 700;
+      padding: 8px 11px;
+      cursor: pointer;
+    }
+
+    .secondary-button:hover {
+      border-color: var(--teal);
+      background: #f4fbfa;
     }
 
     .matrix {
@@ -471,6 +513,7 @@
             </div>
           </div>
           <p>Heat equation은 직접 풀 수 있는 대표적인 parabolic equation이지만, 확산형 PDE를 양자 회로의 유니터리 시간 변화로 옮기는 아이디어를 가장 단순하게 보여줍니다. 이 방식이 더 복잡한 유체 모델링으로 확장될 수 있다면 계산 관점에서 의미가 큽니다.</p>
+          <p class="resource-link">기본 배경: <a href="https://en.wikipedia.org/wiki/Heat_equation" target="_blank" rel="noopener noreferrer">Wikipedia - Heat equation</a></p>
 
           <h2>구현 결과의 장단점</h2>
           <p>이 앱은 작은 격자 위에서 양자 회로가 수행할 유니터리 변환을 정확히 계산합니다. 다만 실제 공간을 표현하는 큐비트 수가 제한되어 있으므로, 여기서 보이는 결과는 큰 유체 문제 전체가 아니라 핵심 원리를 보여주는 축소 모델입니다.</p>
@@ -478,7 +521,7 @@
       </div>
       <section class="stats" aria-label="simulation summary">
         <div class="stat"><small>시간</small><strong id="statTime">0.15</strong></div>
-        <div class="stat"><small>진폭 수</small><strong id="statDim">256</strong></div>
+        <div class="stat"><small>진폭 수</small><strong id="statDim">1024</strong></div>
         <div class="stat"><small>모델 오차</small><strong id="statErr">0.0000</strong></div>
         <div class="stat"><small>최대 오차</small><strong id="statMaxErr">0.0000</strong></div>
       </section>
@@ -489,21 +532,21 @@
     <section class="toolbar" aria-label="controls">
       <div class="control">
         <label for="timeSlider"><span>시간</span><output id="timeOut">0.15</output></label>
-        <input id="timeSlider" type="range" min="0" max="0.8" step="0.01" value="0.15">
+        <input id="timeSlider" type="range" min="0" max="1.2" step="0.01" value="0.15">
       </div>
       <div class="control">
         <label for="horizonSlider"><span>보여줄 시간 범위</span><output id="horizonOut">0.80</output></label>
         <input id="horizonSlider" type="range" min="0.2" max="1.2" step="0.05" value="0.8">
       </div>
       <div class="control">
-        <label for="ampSlider"><span>잔물결 세기</span><output id="ampOut">0.50</output></label>
+        <label for="ampSlider"><span>기본 모양 프리셋</span><output id="ampOut">0.50</output></label>
         <input id="ampSlider" type="range" min="0" max="1" step="0.05" value="0.5">
       </div>
       <div class="control">
-        <label for="pQubits"><span>숨겨진 보조축</span><output id="pOut">5</output></label>
+        <label for="pQubits"><span>숨겨진 보조축</span><output id="pOut">7</output></label>
         <select id="pQubits">
-          <option value="4">4 큐비트</option>
-          <option value="5" selected>5 큐비트</option>
+          <option value="6">6 큐비트</option>
+          <option value="7" selected>7 큐비트</option>
         </select>
       </div>
       <button id="playButton" class="icon-button" type="button" title="Animate time" aria-label="Animate time">▶</button>
@@ -519,6 +562,21 @@
               <span class="key"><span class="swatch"></span>관점 전환</span>
               <span class="key"><span class="swatch rose"></span>시간 변화</span>
               <span class="key"><span class="swatch green"></span>초기 모양</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>초기 분포 직접 편집</h2>
+          <div class="panel-body">
+            <canvas id="initialCanvas" width="900" height="300" aria-label="editable initial heat distribution"></canvas>
+            <div class="editor-actions">
+              <button id="resetInitial" class="secondary-button" type="button">기본 모양</button>
+              <button id="smoothInitial" class="secondary-button" type="button">부드럽게</button>
+            </div>
+            <div class="legend">
+              <span class="key"><span class="swatch green"></span>사용자가 정한 초기값</span>
+              <span class="key"><span class="swatch"></span>드래그 가능한 격자점</span>
             </div>
           </div>
         </section>
@@ -578,6 +636,7 @@
             <div class="plain-note">
               <p>열 확산은 구겨진 천을 펴는 것과 비슷합니다. 높은 부분은 내려가고 낮은 부분은 올라오며, 작은 주름부터 먼저 사라집니다.</p>
               <p>일반적인 heat equation은 정보를 줄이는 방향으로 움직입니다. 반면 양자 회로는 전체 확률을 보존해야 합니다. 그래서 보조축을 하나 더 두고, 더 큰 공간에서는 되돌릴 수 있게 움직인 다음, 우리가 보고 싶은 열 분포만 다시 꺼냅니다.</p>
+              <p>시간이 길어질수록 파동 성분은 보조축 방향으로 더 멀리 이동합니다. 따라서 <strong>t≈1</strong>까지 안정적으로 보려면 보조축 범위와 해상도가 충분히 커야 합니다. 이 앱은 기본값을 그 상황에 맞춰 넓게 잡았습니다.</p>
               <div class="takeaway"><strong>핵심:</strong> 이 회로가 칩 위에서 실제 열을 흐르게 하는 것은 아닙니다. 열 분포를 파동 성분으로 바꾸고, 그 성분들을 되돌릴 수 있게 회전시킨 뒤, 다시 열 확산 그림으로 읽어 내는 방식입니다.</div>
             </div>
           </div>
@@ -622,7 +681,7 @@
   <script>
     const MX = 3;
     const L_X = 2 * Math.PI;
-    const P_MAX = 6.0;
+    const P_MAX = 20.0;
     const TIME_SAMPLES = 27;
 
     const els = {
@@ -644,11 +703,16 @@
       surfaceCanvas: document.getElementById("surfaceCanvas"),
       heatmapCanvas: document.getElementById("heatmapCanvas"),
       lineCanvas: document.getElementById("lineCanvas"),
-      sliceCanvas: document.getElementById("sliceCanvas")
+      sliceCanvas: document.getElementById("sliceCanvas"),
+      initialCanvas: document.getElementById("initialCanvas"),
+      resetInitial: document.getElementById("resetInitial"),
+      smoothInitial: document.getElementById("smoothInitial")
     };
 
     let playing = false;
     let rafId = null;
+    let editableInitial = null;
+    let draggingInitialIndex = null;
 
     function complex(re = 0, im = 0) {
       return { re, im };
@@ -732,15 +796,41 @@
       return Math.sin(x) + amp2 * Math.sin(2 * x);
     }
 
-    function exactU(x, t, amp2) {
-      return Math.exp(-t) * Math.sin(x) + amp2 * Math.exp(-4 * t) * Math.sin(2 * x);
+    function defaultInitialArray(amp2) {
+      const nx = 2 ** MX;
+      return Array.from({ length: nx }, (_, i) => initialU(L_X * i / nx, amp2));
     }
 
-    function simulateAt(t, amp2, mp) {
+    function qftVector(values, inverse = false) {
+      const n = values.length;
+      const sign = inverse ? -1 : 1;
+      const scale = 1 / Math.sqrt(n);
+      const out = Array.from({ length: n }, () => complex());
+      for (let k = 0; k < n; k++) {
+        let acc = complex();
+        for (let j = 0; j < n; j++) {
+          const input = typeof values[j] === "number" ? complex(values[j], 0) : values[j];
+          acc = add(acc, mul(input, phase(sign * 2 * Math.PI * j * k / n)));
+        }
+        out[k] = complex(acc.re * scale, acc.im * scale);
+      }
+      return out;
+    }
+
+    function spectralHeatSolution(u0, t) {
+      const kx = fftFreq(u0.length, L_X);
+      const coeffs = qftVector(u0, false).map((z, i) => {
+        const decay = Math.exp(-kx[i] * kx[i] * t);
+        return complex(z.re * decay, z.im * decay);
+      });
+      return qftVector(coeffs, true).map(z => z.re);
+    }
+
+    function simulateAt(t, initialValues, mp) {
       const g = grids(mp);
       const kx = fftFreq(g.nx, L_X);
       const eta = fftFreq(g.np, 2 * P_MAX);
-      const u0 = g.x.map(value => initialU(value, amp2));
+      const u0 = initialValues.slice(0, g.nx);
 
       let normSq = 0;
       let state = [];
@@ -752,7 +842,7 @@
           state.push(complex(value, 0));
         }
       }
-      const norm = Math.sqrt(normSq);
+      const norm = Math.sqrt(normSq) || 1;
       state = state.map(z => complex(z.re / norm, z.im / norm));
 
       state = qftAlongX(state, g.nx, g.np, false);
@@ -787,8 +877,8 @@
         uQuantum[ix] = sum / discreteWeight;
       }
 
-      const uExact = g.x.map(value => exactU(value, t, amp2));
-      const uInitial = g.x.map(value => initialU(value, amp2));
+      const uExact = spectralHeatSolution(u0, t);
+      const uInitial = u0.slice();
       let errSq = 0;
       let exactSq = 0;
       let maxErr = 0;
@@ -803,14 +893,14 @@
       return { ...g, u0: uInitial, uQuantum, uExact, relError, maxErr, norm, stateDim: g.nx * g.np };
     }
 
-    function simulateTimeSeries(params) {
+    function simulateTimeSeries(params, initialValues) {
       const rows = [];
       const exactRows = [];
       const errors = [];
       const times = [];
       for (let i = 0; i < TIME_SAMPLES; i++) {
         const t = params.horizon * i / (TIME_SAMPLES - 1);
-        const result = simulateAt(t, params.amp2, params.mp);
+        const result = simulateAt(t, initialValues, params.mp);
         times.push(t);
         rows.push(result.uQuantum);
         exactRows.push(result.uExact);
@@ -932,6 +1022,64 @@
       ctx.rotate(-Math.PI / 2);
       ctx.fillText(yLabel, 0, 0);
       ctx.restore();
+    }
+
+    function drawInitialEditor(values) {
+      const { ctx, w, h } = setupCanvas(els.initialCanvas);
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, w, h);
+      const plot = { x: 44, y: 18, w: w - 68, h: h - 58 };
+      const limit = 1.6;
+      const sx = i => plot.x + plot.w * i / (values.length - 1);
+      const sy = value => plot.y + plot.h * (1 - (value + limit) / (2 * limit));
+
+      ctx.strokeStyle = "#edf1ee";
+      ctx.lineWidth = 1;
+      for (let grid = -1; grid <= 1; grid++) {
+        const yy = sy(grid);
+        ctx.beginPath();
+        ctx.moveTo(plot.x, yy);
+        ctx.lineTo(plot.x + plot.w, yy);
+        ctx.stroke();
+      }
+      drawAxes(ctx, plot, "x", "u₀(x)");
+
+      ctx.strokeStyle = "#2f855a";
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      values.forEach((value, i) => {
+        if (i === 0) ctx.moveTo(sx(i), sy(value));
+        else ctx.lineTo(sx(i), sy(value));
+      });
+      ctx.stroke();
+
+      values.forEach((value, i) => {
+        ctx.beginPath();
+        ctx.arc(sx(i), sy(value), 5, 0, 2 * Math.PI);
+        ctx.fillStyle = "#ffffff";
+        ctx.fill();
+        ctx.strokeStyle = "#007c89";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      });
+    }
+
+    function initialEditorValue(event) {
+      const rect = els.initialCanvas.getBoundingClientRect();
+      const plot = { x: 44, y: 18, w: rect.width - 68, h: rect.height - 58 };
+      const x = Math.max(plot.x, Math.min(plot.x + plot.w, event.clientX - rect.left));
+      const y = Math.max(plot.y, Math.min(plot.y + plot.h, event.clientY - rect.top));
+      const idx = Math.max(0, Math.min(editableInitial.length - 1, Math.round((x - plot.x) / plot.w * (editableInitial.length - 1))));
+      const value = 1.6 - 3.2 * ((y - plot.y) / plot.h);
+      return { idx, value: Math.max(-1.6, Math.min(1.6, value)) };
+    }
+
+    function updateInitialFromPointer(event) {
+      const point = initialEditorValue(event);
+      editableInitial[point.idx] = point.value;
+      render();
+      return point.idx;
     }
 
     function drawSlice(result, params) {
@@ -1097,17 +1245,18 @@
       els.statMaxErr.textContent = result.maxErr.toFixed(5);
       els.matrixNote.innerHTML = `
         <div><strong>보이는 격자:</strong> x축 위의 열 위치 ${result.nx}개를 계산합니다.</div>
-        <div><strong>숨겨진 보조 격자:</strong> 되돌릴 수 있는 양자 기록을 위해 ${result.np}개의 보조 위치를 사용합니다.</div>
+        <div><strong>숨겨진 보조 격자:</strong> p ∈ [−${P_MAX}, ${P_MAX}) 범위에서 ${result.np}개의 보조 위치를 사용합니다.</div>
         <div><strong>현재 비교:</strong> 청록색은 회로로 복원한 곡선이고, 붉은색은 고전적 heat equation 계산값입니다.</div>
       `;
     }
 
     function render() {
       const params = parameters();
-      const current = simulateAt(params.t, params.amp2, params.mp);
-      const series = simulateTimeSeries(params);
+      const current = simulateAt(params.t, editableInitial, params.mp);
+      const series = simulateTimeSeries(params, editableInitial);
       updateText(current, params);
       drawCircuit(current, params);
+      drawInitialEditor(editableInitial);
       drawSlice(current, params);
       drawSurface(series, params);
       drawHeatmap(series, params);
@@ -1130,9 +1279,48 @@
       else if (rafId) cancelAnimationFrame(rafId);
     });
 
-    [els.time, els.horizon, els.amp, els.pQubits].forEach(input => {
+    [els.time, els.horizon, els.pQubits].forEach(input => {
       input.addEventListener("input", render);
       input.addEventListener("change", render);
+    });
+
+    els.amp.addEventListener("input", () => {
+      editableInitial = defaultInitialArray(Number(els.amp.value));
+      render();
+    });
+
+    els.amp.addEventListener("change", () => {
+      editableInitial = defaultInitialArray(Number(els.amp.value));
+      render();
+    });
+
+    els.resetInitial.addEventListener("click", () => {
+      editableInitial = defaultInitialArray(Number(els.amp.value));
+      render();
+    });
+
+    els.smoothInitial.addEventListener("click", () => {
+      const n = editableInitial.length;
+      editableInitial = editableInitial.map((value, i, arr) => (arr[(i - 1 + n) % n] + 2 * value + arr[(i + 1) % n]) / 4);
+      render();
+    });
+
+    els.initialCanvas.addEventListener("pointerdown", event => {
+      event.preventDefault();
+      draggingInitialIndex = updateInitialFromPointer(event);
+      els.initialCanvas.setPointerCapture(event.pointerId);
+    });
+
+    els.initialCanvas.addEventListener("pointermove", event => {
+      if (draggingInitialIndex === null) return;
+      event.preventDefault();
+      draggingInitialIndex = updateInitialFromPointer(event);
+    });
+
+    ["pointerup", "pointercancel", "pointerleave"].forEach(type => {
+      els.initialCanvas.addEventListener(type, () => {
+        draggingInitialIndex = null;
+      });
     });
 
     document.querySelectorAll(".tab").forEach(tab => {
@@ -1145,6 +1333,7 @@
       });
     });
 
+    editableInitial = defaultInitialArray(Number(els.amp.value));
     window.addEventListener("resize", render);
     render();
   </script>
